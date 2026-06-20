@@ -11,3 +11,7 @@ frontend/.env.local
 
 # Local files
 .env
+
+# Block text-appended environment backups
+*.env.txt
+backend/.env.txt
