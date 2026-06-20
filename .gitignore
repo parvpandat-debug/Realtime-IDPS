@@ -13,4 +13,4 @@ Thumbs.db
 
 # Secret Keys
 .env
-.env.local
+.env.local 
