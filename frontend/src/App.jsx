@@ -3,8 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 import { Shield, AlertTriangle, Activity, Database } from 'lucide-react';
 
 const SUPABASE_URL = "https://qvjbxeoupprtjfnosisl.supabase.co";
-// Hardcoding your actual long JWT token directly to prevent placeholder mismatches
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2amJ4ZW91cHBydGpmbm9zaXNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4NzMzMzgsImV4cCI6MjA5NzQ0OTMzOH0.-xu0BMlwyL-doOPBu0CirLhnD2CLvXeGbA0xMMOwiRI"; 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY; 
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
