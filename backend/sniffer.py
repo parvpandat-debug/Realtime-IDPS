@@ -1,6 +1,7 @@
 import os
 import time
 import threading
+import subprocess
 from collections import defaultdict
 from scapy.all import sniff, IP, TCP, UDP
 from supabase import create_client, Client
@@ -17,6 +18,9 @@ ip_traffic_counts = defaultdict(int)
 WINDOW_SIZE = 5.0  # Reset monitoring analytics every 5 seconds
 last_reset = time.time()
 
+# Keep track of already blocked IPs during this session to avoid spamming commands
+blocked_ips = set()
+
 def clear_traffic_metrics():
     """Background worker loop to flush rate-tracking metrics periodically"""
     global last_reset
@@ -27,6 +31,33 @@ def clear_traffic_metrics():
 
 # Spin up the tracker flush in an independent background thread
 threading.Thread(target=clear_traffic_metrics, daemon=True).start()
+
+def block_malicious_ip(source_ip):
+    """Executes a native Windows Shell command to inject an immediate block rule"""
+    # Safeguard: Skip loopback, local broadcast, or already blocked IPs
+    if source_ip in ["127.0.0.1", "0.0.0.0"] or source_ip.startswith("169.254."):
+        return
+    if source_ip in blocked_ips:
+        return
+
+    rule_name = f"IDPS_BLOCK_{source_ip}"
+    print(f"\n🚨 [CRITICAL] Threat Mitigation Active! Blocking IP: {source_ip}")
+    
+    # Native netsh command to drop all inbound traffic from this specific remote IP
+    cmd = (
+        f'netsh advfirewall firewall add rule name="{rule_name}" '
+        f'dir=in action=block remoteip={source_ip} enable=yes'
+    )
+    
+    try:
+        result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if result.returncode == 0:
+            print(f"🔒 [SUCCESS] Windows Firewall rule deployed: {rule_name}\n")
+            blocked_ips.add(source_ip)
+        else:
+            print(f"⚠️ [WARNING] Firewall injection dropped: {result.stderr.strip()}\n")
+    except Exception as e:
+        print(f"❌ [ERROR] Mitigation failure: {str(e)}\n")
 
 def process_network_packet(packet):
     """Callback function executed automatically for every caught packet"""
@@ -50,11 +81,13 @@ def process_network_packet(packet):
     risk_level = "Low"
     attack_type = "Normal"
 
-    # --- INTRUSION DETECTION RULES ---
+    # --- INTRUSION DETECTION & PREVENTION RULES ---
     # Rule A: Flooding detection (Simulating a DDoS attempt)
     if ip_traffic_counts[src_ip] > 50:
         risk_level = "High"
         attack_type = "DDoS Attempt"
+        # ACTIVE IDPS MITIGATION HOOK: Immediately block the attacker
+        block_malicious_ip(src_ip)
     
     # Rule B: Scan vectors targeting common administrative management lines
     elif packet.haslayer(TCP) and packet[TCP].dport in [22, 23, 445, 3389]:
@@ -85,7 +118,7 @@ def process_network_packet(packet):
 
 if __name__ == "__main__":
     print("======================================================")
-    print("🚀 IDPS Backend Node Operational. intercepting raw packets...")
+    print("🚀 IDPS Backend Node Operational. Intercepting raw traffic...")
     print("======================================================")
     
     try:
