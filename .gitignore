@@ -6,11 +6,8 @@ backend/__pycache__/
 # Frontend exclusions
 frontend/node_modules/
 frontend/dist/
+frontend/.env
+frontend/.env.local
 
-# OS exclusions
-.DS_Store
-Thumbs.db
-
-# Secret Keys
+# Local files
 .env
-.env.local 
