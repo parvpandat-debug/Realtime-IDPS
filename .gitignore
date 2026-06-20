@@ -1,0 +1,12 @@
+# Backend exclusions
+backend/venv/
+backend/__pycache__/
+*.pyc
+
+# Frontend exclusions
+frontend/node_modules/
+frontend/dist/
+
+# OS exclusions
+.DS_Store
+Thumbs.db
