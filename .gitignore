@@ -10,3 +10,7 @@ frontend/dist/
 # OS exclusions
 .DS_Store
 Thumbs.db
+
+# Secret Keys
+.env
+.env.local
